@@ -1,0 +1,32 @@
+﻿@page "/waluty"
+
+@using KalkulatorWaluty.BazaDanych;
+@using Microsoft.EntityFrameworkCore;
+
+@inject KalkulatorWalutContext KalkulatorWalutContext;
+
+
+<h3>Dostępne waluty</h3>
+
+<MudTable Items="WalutyKolekcja" Hover="true">
+    <HeaderContent>
+        <MudTh>Nazwa</MudTh>
+        <MudTh>Symbol</MudTh>
+        <MudTh>Przelicznik do $</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Nazwa">@context.Nazwa</MudTd>
+        <MudTd DataLabel="Symbol">@context.Symbol</MudTd>
+        <MudTd DataLabel="PrzelicznikDoDolara">@context.PrzelicznikDoDolara</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+
+    IEnumerable<Waluta> WalutyKolekcja { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        WalutyKolekcja = await KalkulatorWalutContext.Waluty.ToListAsync();
+    }
+}

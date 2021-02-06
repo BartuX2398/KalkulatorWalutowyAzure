@@ -1,0 +1,119 @@
+﻿@page "/"
+
+@using KalkulatorWaluty.BazaDanych;
+@using Microsoft.EntityFrameworkCore;
+
+@inject KalkulatorWalutContext KalkulatorWalutContext;
+
+<h2>Kalkulator</h2>
+
+<MudGrid>
+    <MudItem lg="4" xs="12">
+        <MudGrid Spacing="1" Justify="Justify.Center">
+            <MudItem xs="6">
+                <MudTextField
+                      DebounceInterval="10"
+                      OnDebounceIntervalElapsed="WalutaPierwszaZmieniona"
+                      @bind-Value="WalutaPierwszaIlosc"
+                      Variant="Variant.Outlined"></MudTextField>
+            </MudItem>
+            <MudItem xs="6">
+                <MudSelect T="double" Strict="true" Variant="Variant.Outlined" Format="F2" @bind-Value="WalutaPierwszaWartosc">
+                    @foreach (var waluta in WalutyKolekcja)
+                    {
+                        <MudSelectItem @bind- Value="waluta.PrzelicznikDoDolara">@waluta.Nazwa (@waluta.Symbol)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="1" Justify="Justify.Center">
+            <MudItem xs="6">
+                <MudTextField
+                      DebounceInterval="10"
+                      OnDebounceIntervalElapsed="WalutaDrugaZmieniona"
+                      @bind-Value="WalutaDrugaIlosc"
+                      Variant="Variant.Outlined"
+                              ></MudTextField>
+            </MudItem>
+            <MudItem xs="6">
+                <MudSelect T="double" Strict="true" Variant="Variant.Outlined" Format="F2" @bind-Value="WalutaDrugaWartosc" >
+                    @foreach (var waluta in WalutyKolekcja)
+                    {
+                        <MudSelectItem Value="waluta.PrzelicznikDoDolara">@waluta.Nazwa (@waluta.Symbol)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private double _walutaPierwszaWartosc;
+    private double _walutaDrugaWartosc;
+
+    private string WalutaPierwszaIlosc;
+    private string WalutaDrugaIlosc;
+
+    private double WalutaPierwszaWartosc
+    {
+        get => _walutaPierwszaWartosc;
+        set
+        {
+            _walutaPierwszaWartosc = value;
+            WalutaZmieniona();
+        }
+    }
+
+    private double WalutaDrugaWartosc
+    {
+        get => _walutaDrugaWartosc;
+        set
+        {
+            _walutaDrugaWartosc = value;
+            WalutaZmieniona();
+        }
+    }
+
+    IEnumerable<Waluta> WalutyKolekcja { get; set; } = new List<Waluta>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        WalutyKolekcja = await KalkulatorWalutContext.Waluty.ToListAsync();
+
+        WalutaPierwszaWartosc = WalutyKolekcja.First(x => x.Symbol == "PLN").PrzelicznikDoDolara;
+        WalutaDrugaWartosc = WalutyKolekcja.First(x => x.Symbol == "USD").PrzelicznikDoDolara;
+    }
+
+    void WalutaPierwszaZmieniona(string wartoscTekst)
+    {
+        double wartosc = 0;
+        double wynik = 0;
+
+        if(double.TryParse(wartoscTekst, out wartosc))
+        {
+            wynik = (wartosc * WalutaPierwszaWartosc) / WalutaDrugaWartosc;
+        }
+
+        WalutaDrugaIlosc = wynik.ToString();
+    }
+
+    void WalutaDrugaZmieniona(string wartoscTekst)
+    {
+        double wartosc = 0;
+        double wynik = 0;
+
+        if (double.TryParse(wartoscTekst, out wartosc))
+        {
+            wynik = (wartosc * WalutaDrugaWartosc) / WalutaPierwszaWartosc;
+        }
+
+        WalutaPierwszaIlosc = wynik.ToString();
+    }
+
+    void WalutaZmieniona()
+    {
+        WalutaPierwszaIlosc = 0.ToString();
+        WalutaDrugaIlosc = 0.ToString();
+    }
+}
